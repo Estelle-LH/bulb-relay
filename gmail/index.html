@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Send to bulb</title>
+<!--
+  bulb's Gmail relay page (Part 34 A, docs/gmail-phone.md). Google sends the browser here after
+  "Allow", with ?code=...&state=... in the address. This page only builds a text message to bulb:
+  "gmail <state> <code>". bulb's number is the digits after the last "." in the state.
+  It stores nothing, calls nothing and loads nothing from anywhere else. The code is useless on
+  its own: bulb's Mac holds the secret that goes with it, and it works once, for 10 minutes.
+-->
+<style>
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --accent: #0b57d0; --accent-text: #ffffff; --box: #f1f3f4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; --accent: #8ab4f8; --accent-text: #0b1b33; --box: #222426; }
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font-size: 24px; margin: 0 0 12px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  .send { display: block; text-align: center; padding: 16px; border-radius: 12px; background: var(--accent);
+          color: var(--accent-text); font-weight: 600; text-decoration: none; font-size: 19px; }
+  button { margin-top: 12px; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--muted);
+           background: transparent; color: var(--text); font: inherit; }
+  textarea { width: 100%; box-sizing: border-box; margin-top: 12px; padding: 10px; border-radius: 8px; border: 0;
+             background: var(--box); color: var(--text); font: 13px/1.4 ui-monospace, Menlo, monospace; resize: none; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="ok" class="hidden">
+    <h1>One more tap</h1>
+    <p>Tap the button: it opens Messages with a text to bulb. Press send, and bulb connects your Gmail.</p>
+    <a id="send" class="send" href="#">Send to bulb</a>
+    <button id="copy" type="button">Copy the text instead</button>
+    <textarea id="text" rows="4" readonly aria-label="The text to send to bulb"></textarea>
+    <p id="copied" class="hidden">Copied. Paste it into your chat with bulb and send it.</p>
+  </section>
+  <section id="denied" class="hidden">
+    <h1>Not connected</h1>
+    <p>You did not allow it on the Google page, so nothing was sent. You can close this page.</p>
+  </section>
+  <section id="bad" class="hidden">
+    <h1>This link is not complete</h1>
+    <p>Reply "gmail" to bulb for a new link.</p>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var STATE = /^[A-Za-z0-9_-]{20,}\.(\d{6,15})$/;
+  var CODE = /^[A-Za-z0-9\/_\-.~]{10,512}$/;
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+
+  function read(search) {
+    var q = new URLSearchParams(search || "");
+    return { code: q.get("code") || "", state: q.get("state") || "", error: q.get("error") || "" };
+  }
+
+  // The text message to bulb and the sms: link; null when the address is not one Google made.
+  function build(p) {
+    var m = STATE.exec(p.state);
+    if (!m || !CODE.test(p.code)) { return null; }
+    var body = "gmail " + p.state + " " + p.code;
+    return { body: body, href: "sms:+" + m[1] + "?&body=" + encodeURIComponent(body) };
+  }
+
+  function start() {
+    var p = read(window.location.search);
+    // keep the code out of the browser history
+    try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* not allowed: fine */ }
+    if (p.error) { show("denied"); return; }
+    var b = build(p);
+    if (!b) { show("bad"); return; }
+    document.getElementById("send").setAttribute("href", b.href);
+    var box = document.getElementById("text");
+    box.value = b.body;
+    document.getElementById("copy").addEventListener("click", function () {
+      box.select();
+      var done = function () { show("copied"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(b.body).then(done, function () { document.execCommand("copy"); done(); });
+      } else { document.execCommand("copy"); done(); }
+    });
+    show("ok");
+  }
+
+  window.bulbRelay = { read: read, build: build };
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", start); } else { start(); }
+})();
+</script>
+</body>
+</html>
