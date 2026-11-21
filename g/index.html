@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<!-- GMAIL_SHORT_CODE (M716): the relay endpoint's /link address (deploy/relay). Empty: every short link says to text
+     bulb "gmail" again. -->
+<meta name="bulb-relay-link" content="https://7ay1ioe1ob.execute-api.us-east-1.amazonaws.com/link">
+<title>Connect Gmail</title>
+<!--
+  bulb's 8-character Gmail link (11/19, M716; GMAIL_SHORT_CODE). bulb's first text carries this page's address with
+  a code after '#' (https://getbulb.lighthouseinvest.io/g/#<code>). The fragment never reaches the web server; the
+  page asks the relay endpoint for the Google sign-in address kept under that code and goes there. The endpoint keeps
+  only code -> address, until its first use or 30 minutes. The page stores nothing and loads nothing else. When this
+  file changes, copy it to Estelle-LH/bulb-relay as g/index.html (docs/gmail-phone.md).
+-->
+<style>
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; } }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
+  p { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <p id="msg">Opening Google&hellip;</p>
+</main>
+<script>
+(function () {
+  var GONE = "This link has expired or was used. Text bulb \"gmail\" for a new one.";
+  var say = function (t) { document.getElementById("msg").textContent = t; };
+  var m = document.querySelector('meta[name="bulb-relay-link"]');
+  var at = m ? (m.getAttribute("content") || "").trim() : "";
+  var c = location.hash.slice(1);
+  if (!/^https:\/\/[^\s"'<>]+$/.test(at) || !/^[A-Za-z0-9]{8}$/.test(c)) { say(GONE); return; }
+  fetch(at + "?c=" + encodeURIComponent(c), { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      var u = j && typeof j.url === "string" ? j.url : "";
+      if (u.indexOf("https://accounts.google.com/o/oauth2/v2/auth?") !== 0) { say(GONE); return; }
+      location.replace(u);
+    })
+    .catch(function () { say("Google could not be reached just now. Open this link again in a minute."); });
+})();
+</script>
+</body>
+</html>
