@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<!-- NAMES_FORM (M646): the relay endpoint's /names address (deploy/relay). Empty: the form says to text the names. -->
+<meta name="bulb-relay-names" content="">
+<title>Your names for bulb</title>
+<!--
+  bulb's names form (M646). bulb texts a link to this page when it isn't sure of her full name; the part after "#"
+  carries the link's id and the names bulb found in her email (never sent to any server by the browser). She checks
+  or fixes them, adds other names (maiden name, other spellings), and the page puts them at the relay endpoint for
+  bulb's Mac to take, once, within 10 minutes. It stores nothing and loads nothing from anywhere else.
+-->
+<style>
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --accent: #0b57d0; --accent-text: #ffffff; --box: #f1f3f4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; --accent: #8ab4f8; --accent-text: #0b1b33; --box: #222426; }
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font-size: 24px; margin: 0 0 12px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid var(--muted);
+          background: var(--box); color: var(--text); font: inherit; }
+  button { margin-top: 16px; width: 100%; padding: 14px; border-radius: 12px; border: 0; font: inherit; }
+  #add { background: transparent; color: var(--accent); border: 1px solid var(--muted); }
+  #send { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="form" class="hidden">
+    <h1>Your full names</h1>
+    <p>bulb searches every state's unclaimed money list under each name you put here.</p>
+    <div id="names"></div>
+    <button id="add" type="button">+ Another name</button>
+    <button id="send" type="button">Search these names</button>
+  </section>
+  <section id="done" class="hidden">
+    <h1>Done</h1>
+    <p>Go back to your texts.</p>
+  </section>
+  <section id="text" class="hidden">
+    <h1>Text them instead</h1>
+    <p>This page couldn't reach bulb. Text bulb your full names, for example "Pat Lee and Patricia Lee".</p>
+  </section>
+  <section id="bad" class="hidden">
+    <h1>This link is not complete</h1>
+    <p>Text bulb your full names instead.</p>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var STATE = /^[A-Za-z0-9_-]{20,}\.\d{6,15}$/;
+  var NAME = /^[A-Za-z][A-Za-z '.-]{1,78}[A-Za-z.]$/;
+  var MAX = 6;
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+  function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  // "#<state>" or "#<state>~<names as base64url JSON>"
+  function read(hash) {
+    var h = String(hash || "").replace(/^#/, "");
+    var i = h.indexOf("~");
+    var state = i < 0 ? h : h.slice(0, i);
+    var names = [];
+    if (i >= 0) {
+      try {
+        var b = h.slice(i + 1).replace(/-/g, "+").replace(/_/g, "/");
+        var got = JSON.parse(decodeURIComponent(escape(atob(b))));
+        if (Array.isArray(got)) { names = got.filter(function (n) { return typeof n === "string"; }).slice(0, MAX); }
+      } catch (e) { names = []; }
+    }
+    return { state: STATE.test(state) ? state : "", names: names };
+  }
+
+  function clean(list) {
+    var out = [];
+    list.forEach(function (n) {
+      var t = String(n || "").split(/\s+/).join(" ").trim();
+      if (NAME.test(t) && t.split(" ").length >= 2 && out.indexOf(t) < 0 && out.length < MAX) { out.push(t); }
+    });
+    return out;
+  }
+
+  function endpoint() {
+    var m = document.querySelector('meta[name="bulb-relay-names"]');
+    var u = m ? (m.getAttribute("content") || "").trim() : "";
+    return /^https:\/\/[^\s"'<>]+$/.test(u) ? u : "";
+  }
+
+  function post(url, body, done, fallback) {
+    if (!url || !window.fetch) { fallback(); return; }
+    window.fetch(url, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
+                        headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function (r) { if (r.ok) { done(); } else { fallback(); } }, fallback);
+  }
+
+  function row(value, first) {
+    var box = document.getElementById("names");
+    var wrap = document.createElement("div");
+    var label = document.createElement("label");
+    label.textContent = first ? "Full legal name" : "Another name (maiden name, other spelling)";
+    var input = document.createElement("input");
+    input.setAttribute("autocomplete", "name");
+    input.value = value || "";
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    box.appendChild(wrap);
+    return input;
+  }
+
+  function start() {
+    var p = read(window.location.hash);
+    try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* not allowed: fine */ }
+    if (!p.state) { show("bad"); return; }
+    var inputs = [];
+    (p.names.length ? p.names : [""]).forEach(function (n, i) { inputs.push(row(n, i === 0)); });
+    document.getElementById("add").addEventListener("click", function () {
+      if (inputs.length < MAX) { inputs.push(row("", false)); }
+    });
+    document.getElementById("send").addEventListener("click", function () {
+      var names = clean(inputs.map(function (x) { return x.value; }));
+      if (!names.length) { return; }
+      post(endpoint(), { state: p.state, names: names },
+           function () { hide("form"); show("done"); }, function () { hide("form"); show("text"); });
+    });
+    show("form");
+  }
+
+  window.bulbNames = { read: read, clean: clean, endpoint: endpoint, post: post };
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", start); } else { start(); }
+})();
+</script>
+</body>
+</html>
