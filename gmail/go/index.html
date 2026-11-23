@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Connect Gmail</title>
+<!--
+  bulb's short Gmail link (11/18, M691 #8; GMAIL_SHORT_LINK). bulb's first text carried Google's whole sign-in address,
+  about 600 characters. Now it carries this page's address with a short fragment after '#':
+    c = the Web client's id, s = the state, p = the PKCE challenge, k = r (read) or s (read and drafts).
+  This page builds Google's sign-in address from them and goes there at once. The fragment never reaches the web
+  server (browsers do not send it), the page stores nothing and loads nothing from anywhere else. Google sends the
+  browser back to the relay page (../), which does the rest as before. When this file changes, copy it to
+  Estelle-LH/bulb-relay as gmail/go/index.html (docs/gmail-phone.md).
+-->
+<style>
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; } }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
+  p { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <p id="msg">Opening Google…</p>
+</main>
+<script>
+(function () {
+  var AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
+  var READ = "https://www.googleapis.com/auth/gmail.readonly";
+  var COMPOSE = "https://www.googleapis.com/auth/gmail.compose";
+  var f = new URLSearchParams(location.hash.slice(1));
+  var c = f.get("c"), s = f.get("s"), p = f.get("p"), k = f.get("k");
+  if (!c || !s || !p || (k !== "r" && k !== "s")) {
+    document.getElementById("msg").textContent = "This link is not complete. Text bulb \"gmail\" for a new one.";
+    return;
+  }
+  var q = new URLSearchParams({
+    client_id: c, redirect_uri: location.origin + "/gmail/", response_type: "code",
+    scope: k === "s" ? READ + " " + COMPOSE : READ, code_challenge: p, code_challenge_method: "S256", state: s,
+    access_type: "offline", prompt: "consent"
+  });
+  if (k === "s") { q.set("include_granted_scopes", "true"); }
+  location.replace(AUTH + "?" + q.toString());
+})();
+</script>
+</body>
+</html>
