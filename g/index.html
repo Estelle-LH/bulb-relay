@@ -16,22 +16,60 @@
   file changes, copy it to Estelle-LH/bulb-relay as g/index.html (docs/gmail-phone.md).
 -->
 <style>
-  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; } }
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --accent: #0b57d0; --accent-text: #ffffff;
+          --box: #f1f3f4; --line: #dadce0; --ok: #188038; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; --accent: #8ab4f8; --accent-text: #0b1b33;
+            --box: #222426; --line: #3c4043; --ok: #81c995; }
+  }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
-  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
-  p { color: var(--muted); }
+  body { font: 19px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         -webkit-text-size-adjust: 100%; }
+  main { max-width: 480px; margin: 0 auto; padding: 28px 20px 40px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; margin: 0 0 40px; }
+  .brand svg { width: 44px; height: 44px; flex: none; }
+  .badge { width: 56px; height: 56px; margin: 0 0 16px; display: block; }
+  h1 { font-size: 30px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 12px; }
+  p { margin: 0 0 20px; color: var(--muted); }
+  .btn { display: block; box-sizing: border-box; width: 100%; margin: 12px 0 0; padding: 17px 16px; border-radius: 14px;
+         border: 0; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600;
+         text-align: center; text-decoration: none; }
+  .btn.quiet { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
+  .foot { margin: 48px 0 0; font-size: 14px; color: var(--muted); }
+  .foot a { color: var(--muted); }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 <main>
-  <p id="msg">Opening Google&hellip;</p>
+  <div class="brand" aria-label="bulb">
+    <svg viewBox="150 90 724 830" aria-hidden="true">
+      <g stroke="#ffb800" stroke-width="34" stroke-linecap="round">
+        <line x1="512" y1="118" x2="512" y2="168"/><line x1="290" y1="200" x2="320" y2="240"/>
+        <line x1="734" y1="200" x2="704" y2="240"/><line x1="190" y1="390" x2="240" y2="405"/>
+        <line x1="834" y1="390" x2="784" y2="405"/>
+      </g>
+      <path d="M512 215 C 680 215 780 335 780 470 C 780 560 735 615 690 665 C 660 700 650 725 648 760 L 376 760 C 374 725 364 700 334 665 C 289 615 244 560 244 470 C 244 335 344 215 512 215 Z" fill="#ffd84d" stroke="#e8a300" stroke-width="16"/>
+      <path d="M350 400 C 360 330 410 285 470 270" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" opacity="0.75"/>
+      <ellipse cx="435" cy="490" rx="26" ry="34" fill="#3b2f2f"/><ellipse cx="589" cy="490" rx="26" ry="34" fill="#3b2f2f"/>
+      <path d="M470 560 Q 512 605 554 560" fill="none" stroke="#3b2f2f" stroke-width="16" stroke-linecap="round"/>
+      <rect x="380" y="760" width="264" height="50" rx="25" fill="#9aa3b2"/>
+      <rect x="392" y="812" width="240" height="46" rx="23" fill="#7f8898"/>
+      <path d="M440 860 L 584 860 Q 572 905 512 905 Q 452 905 440 860 Z" fill="#5e6675"/>
+    </svg>
+    <span>bulb</span>
+  </div>
+  <h1 id="title">Opening Google&hellip;</h1>
+  <p id="msg">One moment.</p>
+  <p class="foot">bulb, from LightHouse Wealth Partners. <a href="/privacy/">Privacy</a></p>
 </main>
 <script>
 (function () {
-  var GONE = "This link has expired or was used. Text bulb \"gmail\" for a new one.";
-  var say = function (t) { document.getElementById("msg").textContent = t; };
+  var GONE = ["This link has expired", "It was already used, or it is more than 30 minutes old. Text bulb \"gmail\" and it will send you a new one."];
+  var say = function (t) {
+    document.getElementById("title").textContent = t[0];
+    document.getElementById("msg").textContent = t[1];
+  };
   var m = document.querySelector('meta[name="bulb-relay-link"]');
   var at = m ? (m.getAttribute("content") || "").trim() : "";
   var c = location.hash.slice(1);
@@ -43,7 +81,7 @@
       if (u.indexOf("https://accounts.google.com/o/oauth2/v2/auth?") !== 0) { say(GONE); return; }
       location.replace(u);
     })
-    .catch(function () { say("Google could not be reached just now. Open this link again in a minute."); });
+    .catch(function () { say(["Google can't be reached right now", "Open this link again in a minute."]); });
 })();
 </script>
 </body>

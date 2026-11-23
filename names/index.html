@@ -14,45 +14,76 @@
   bulb's Mac to take, once, within 10 minutes. It stores nothing and loads nothing from anywhere else.
 -->
 <style>
-  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --accent: #0b57d0; --accent-text: #ffffff; --box: #f1f3f4; }
+  :root { --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --accent: #0b57d0; --accent-text: #ffffff;
+          --box: #f1f3f4; --line: #dadce0; --ok: #188038; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; --accent: #8ab4f8; --accent-text: #0b1b33; --box: #222426; }
+    :root { --bg: #121212; --text: #ececec; --muted: #a8adb3; --accent: #8ab4f8; --accent-text: #0b1b33;
+            --box: #222426; --line: #3c4043; --ok: #81c995; }
   }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
-  body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 440px; margin: 0 auto; padding: 40px 16px; }
-  h1 { font-size: 24px; margin: 0 0 12px; }
-  p { margin: 0 0 16px; color: var(--muted); }
-  label { display: block; margin: 12px 0 4px; font-weight: 600; }
-  input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid var(--muted);
+  body { font: 19px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         -webkit-text-size-adjust: 100%; }
+  main { max-width: 480px; margin: 0 auto; padding: 28px 20px 40px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; margin: 0 0 40px; }
+  .brand svg { width: 44px; height: 44px; flex: none; }
+  .badge { width: 56px; height: 56px; margin: 0 0 16px; display: block; }
+  h1 { font-size: 30px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 12px; }
+  p { margin: 0 0 20px; color: var(--muted); }
+  .btn { display: block; box-sizing: border-box; width: 100%; margin: 12px 0 0; padding: 17px 16px; border-radius: 14px;
+         border: 0; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600;
+         text-align: center; text-decoration: none; }
+  .btn.quiet { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
+  .foot { margin: 48px 0 0; font-size: 14px; color: var(--muted); }
+  .foot a { color: var(--muted); }
+  label { display: block; margin: 16px 0 6px; font-size: 16px; font-weight: 600; color: var(--text); }
+  input { width: 100%; box-sizing: border-box; padding: 14px; border-radius: 12px; border: 1px solid var(--line);
           background: var(--box); color: var(--text); font: inherit; }
-  button { margin-top: 16px; width: 100%; padding: 14px; border-radius: 12px; border: 0; font: inherit; }
-  #add { background: transparent; color: var(--accent); border: 1px solid var(--muted); }
-  #send { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+  #add { margin-top: 20px; }
   .hidden { display: none; }
 </style>
 </head>
 <body>
 <main>
+  <div class="brand" aria-label="bulb">
+    <svg viewBox="150 90 724 830" aria-hidden="true">
+      <g stroke="#ffb800" stroke-width="34" stroke-linecap="round">
+        <line x1="512" y1="118" x2="512" y2="168"/><line x1="290" y1="200" x2="320" y2="240"/>
+        <line x1="734" y1="200" x2="704" y2="240"/><line x1="190" y1="390" x2="240" y2="405"/>
+        <line x1="834" y1="390" x2="784" y2="405"/>
+      </g>
+      <path d="M512 215 C 680 215 780 335 780 470 C 780 560 735 615 690 665 C 660 700 650 725 648 760 L 376 760 C 374 725 364 700 334 665 C 289 615 244 560 244 470 C 244 335 344 215 512 215 Z" fill="#ffd84d" stroke="#e8a300" stroke-width="16"/>
+      <path d="M350 400 C 360 330 410 285 470 270" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" opacity="0.75"/>
+      <ellipse cx="435" cy="490" rx="26" ry="34" fill="#3b2f2f"/><ellipse cx="589" cy="490" rx="26" ry="34" fill="#3b2f2f"/>
+      <path d="M470 560 Q 512 605 554 560" fill="none" stroke="#3b2f2f" stroke-width="16" stroke-linecap="round"/>
+      <rect x="380" y="760" width="264" height="50" rx="25" fill="#9aa3b2"/>
+      <rect x="392" y="812" width="240" height="46" rx="23" fill="#7f8898"/>
+      <path d="M440 860 L 584 860 Q 572 905 512 905 Q 452 905 440 860 Z" fill="#5e6675"/>
+    </svg>
+    <span>bulb</span>
+  </div>
   <section id="form" class="hidden">
     <h1>Your full names</h1>
     <p>bulb searches every state's unclaimed money list under each name you put here.</p>
     <div id="names"></div>
-    <button id="add" type="button">+ Another name</button>
-    <button id="send" type="button">Search these names</button>
+    <button id="add" class="btn quiet" type="button">+ Another name</button>
+    <button id="send" class="btn" type="button">Search these names</button>
   </section>
   <section id="done" class="hidden">
-    <h1>Done</h1>
-    <p>Go back to your texts.</p>
+    <svg class="badge" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="28" fill="var(--ok)"/>
+      <path d="M17 29 L 25 37 L 40 20" fill="none" stroke="var(--bg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>Got your names</h1>
+    <p>bulb is searching the state lists under these names and will text you what it finds.</p>
+    <a id="back-done" class="btn" href="sms:">Back to Messages</a>
   </section>
   <section id="text" class="hidden">
-    <h1>Text them instead</h1>
+    <h1>Text your names instead</h1>
     <p>This page couldn't reach bulb. Text bulb your full names, for example "Pat Lee and Patricia Lee".</p>
   </section>
   <section id="bad" class="hidden">
     <h1>This link is not complete</h1>
     <p>Text bulb your full names instead.</p>
   </section>
+  <p class="foot">bulb, from LightHouse Wealth Partners. <a href="/privacy/">Privacy</a></p>
 </main>
 <script>
 (function () {
@@ -120,6 +151,7 @@
     var p = read(window.location.hash);
     try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* not allowed: fine */ }
     if (!p.state) { show("bad"); return; }
+    document.getElementById("back-done").setAttribute("href", "sms:+" + p.state.split(".").pop());   // bulb's number
     var inputs = [];
     (p.names.length ? p.names : [""]).forEach(function (n, i) { inputs.push(row(n, i === 0)); });
     document.getElementById("add").addEventListener("click", function () {
