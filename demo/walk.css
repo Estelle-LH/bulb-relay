@@ -1,4 +1,4 @@
-/* Layout: a step bar on top; under it the three screens the reader sees at that moment side by side (their phone, the page bulb texts them, the household map), stacked on phones. */
+/* Layout: a step bar on top; under it the three screens the reader sees at that moment side by side (your texts, Bulb's backend, the household map), stacked on phones. */
 :root{
   --bg:#f4f6f8; --card:#ffffff; --ink:#1a2230; --muted:#5d6878; --faint:#9aa4b2; --line:#dde3ea;
   --bubble-me:#2f6fe4; --bubble-me-ink:#ffffff; --bubble-bulb:#eef1f5; --edge:#7f9fd6; --edge-hi:#2f5fb3;
@@ -40,7 +40,8 @@ header p{margin:4px 0 0;color:var(--muted);max-width:72ch}
 .tag.ok{background:var(--closed-soft);color:var(--closed)} .tag.fix{background:var(--fix-soft);color:var(--fix)} .tag.built{background:var(--built-soft);color:var(--built)}
 .fixnote{background:var(--fix-soft);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .fixnote b{color:var(--fix)}
-.grid{display:grid;grid-template-columns:320px minmax(0,1fr) minmax(0,1.25fr);gap:14px;align-items:start}
+.grid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px;align-items:start}
+.mapcard{grid-column:1/-1}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0}
 .card>h3{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;display:flex;justify-content:space-between;gap:8px}
 .phone{display:flex;flex-direction:column;gap:6px;padding:12px;max-height:560px;overflow-y:auto}
@@ -65,14 +66,16 @@ header p{margin:4px 0 0;color:var(--muted);max-width:72ch}
 .pill.open{background:var(--open-soft);color:var(--open)} .pill.done{background:var(--closed-soft);color:var(--closed)}
 .mailnote{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
 .mapwrap{padding:6px;overflow-x:auto}
-svg{display:block;width:100%;height:auto;min-width:420px}
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 14px 0;font-size:12.5px;color:var(--muted)}
+.maplegend .ring{display:inline-block;width:11px;height:11px;border-radius:50%;border:2.2px solid;margin-right:6px;vertical-align:-1px}
+.maplegend .ring.a{border-color:var(--open)} .maplegend .ring.s{border-color:var(--closed)}
+svg{display:block;width:100%;max-width:1040px;margin:0 auto;height:auto;min-width:420px}
 .lbl{font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ink)}
 .edge{fill:none;stroke:var(--edge);stroke-opacity:.35}
 .xedge{fill:none;stroke:var(--edge);stroke-opacity:.5;stroke-dasharray:3 4}
 .hide{opacity:0} .dim{opacity:.18}
 .hi{stroke:var(--edge-hi);stroke-opacity:.95}
 @media (prefers-reduced-motion:no-preference){.n,.edge,.xedge{transition:opacity .35s ease}}
-@media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .mapcard{grid-column:1/-1}}
 @media (max-width:680px){.grid{grid-template-columns:minmax(0,1fr)}}
 .nowtext{min-width:0}
 .progline{display:flex;justify-content:space-between;font-size:13px}
